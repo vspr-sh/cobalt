@@ -9,7 +9,7 @@ env:
 
 jobs:
   build-and-push-image:
-    runs-on: blacksmith
+    runs-on: ubuntu-latest
     strategy: 
       fail-fast: false
       matrix:
