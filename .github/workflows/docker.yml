@@ -45,17 +45,17 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           tags: |
-            type=raw,value=latest
-            type=raw,value=${{ steps.release-meta.outputs.version }}
-            type=raw,value=${{ steps.release-meta.outputs.major_version }}
-            type=raw,value=${{ steps.release-meta.outputs.version }}-${{ steps.release-meta.outputs.commit_short }}
+            type=raw,value=${{ matrix.target }}
+            type=raw,value=${{ matrix.target }}-${{ steps.release-meta.outputs.version }}
+            type=raw,value=${{ matrix.target }}-${{ steps.release-meta.outputs.major_version }}
+            type=raw,value=${{ matrix.target }}-${{ steps.release-meta.outputs.version }}-${{ steps.release-meta.outputs.commit_short }}
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           target: ${{ matrix.target }}
           tags: ${{ steps.meta.outputs.tags }}
