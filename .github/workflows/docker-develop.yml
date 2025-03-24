@@ -10,6 +10,10 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    strategy: 
+      fail-fast: false
+      matrix:
+        target: [ api, web ]
     permissions:
       contents: read
       packages: write
@@ -49,6 +53,7 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
+          target: ${{ matrix.target }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha

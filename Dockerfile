@@ -6,21 +6,49 @@ FROM base AS build
 WORKDIR /app
 COPY . /app
 
-RUN corepack enable
-RUN apk add --no-cache python3 alpine-sdk
+FROM build AS build-api
+WORKDIR /app
+COPY . /app
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --prod --frozen-lockfile
 
-RUN pnpm deploy --filter=@imput/cobalt-api --prod /prod/api
+RUN pnpm deploy --filter=@imput/cobalt-api --prod /prod/api 
 
-FROM base AS api
+FROM base AS api 
+ENV API_URL="https://cobalt-api.vspr.sh"
 WORKDIR /app
 
-COPY --from=build --chown=node:node /prod/api /app
-COPY --from=build --chown=node:node /app/.git /app/.git
+COPY --from=build-api /prod/api /app
+COPY --from=build-api /app/.git /app/.git
 
-USER node
+EXPOSE 9000/tcp 
+CMD ["node", "src/cobalt"]
 
-EXPOSE 9000
-CMD [ "node", "src/cobalt" ]
+FROM build AS build-web
+ARG WEB_HOST WEB_DEFAULT_API
+ENV WEB_HOST=${WEB_HOST:-cobalt.vspr.sh}
+ENV WEB_DEFAULT_API=${WEB_DEFAULT_API}
+WORKDIR /app 
+COPY . /app
+
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+RUN pnpm run -r build
+
+FROM nginx:alpine-slim AS web
+ARG WEB_HOST
+ENV SERVER_NAME=${WEB_HOST:-cobalt.vspr.sh}
+
+
+RUN apk add --no-cache gettext
+
+COPY docker/nginx.conf.template /etc/nginx/nginx.conf.template
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 80/tcp
+ENTRYPOINT [ "/entrypoint.sh" ]
+
+

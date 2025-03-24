@@ -1,0 +1,50 @@
+user nginx;
+worker_processes auto;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    types {
+        # Add MIME type for .mjs files
+        application/javascript mjs;
+    }
+
+    sendfile on;
+    keepalive_timeout 15;
+    server_tokens off;
+
+    # Don't keep logs
+    access_log /dev/null;
+    error_log /dev/null;
+
+    # Cache frequently requested static files in memory
+    open_file_cache max=1000 inactive=20s;
+    open_file_cache_valid 30s;
+    open_file_cache_min_uses 2;
+    open_file_cache_errors on;
+
+    server {
+        listen 80;
+        server_name ${SERVER_NAME};
+
+        root /usr/share/nginx/html;
+
+        location / {
+            try_files $uri $uri/ $uri.html /index.html;
+        }
+
+         # Cache static files
+        location ~* \.(css|js|mjs|png|svg|wasm|webp|woff|woff2)$ {
+            expires 30d;
+            add_header Cache-Control "public";
+        }
+
+        error_page 404 /404.html;
+        location = /404.html {
+            internal;
+        }
+    }
+}
