@@ -53,5 +53,7 @@ COPY docker/nginx.conf.template /etc/nginx/nginx.conf.template
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+COPY --from=build-web /app/web/build /usr/share/nginx/html
+
 EXPOSE 80/tcp
 ENTRYPOINT [ "/entrypoint.sh" ]
