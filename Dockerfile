@@ -3,8 +3,10 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
 FROM base AS build
-WORKDIR /app
-COPY . /app
+
+RUN corepack enable
+RUN apk add --no-cache python3 alpine-sdk
+
 
 FROM build AS build-api
 WORKDIR /app
@@ -15,6 +17,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 RUN pnpm deploy --filter=@imput/cobalt-api --prod /prod/api 
 
+
 FROM base AS api 
 ENV API_URL="https://cobalt-api.vspr.sh"
 WORKDIR /app
@@ -24,6 +27,7 @@ COPY --from=build-api /app/.git /app/.git
 
 EXPOSE 9000/tcp 
 CMD ["node", "src/cobalt"]
+
 
 FROM build AS build-web
 ARG WEB_HOST WEB_DEFAULT_API
@@ -36,6 +40,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
 RUN pnpm run -r build
+
 
 FROM nginx:alpine-slim AS web
 ARG WEB_HOST
@@ -50,5 +55,3 @@ RUN chmod +x /entrypoint.sh
 
 EXPOSE 80/tcp
 ENTRYPOINT [ "/entrypoint.sh" ]
-
-
