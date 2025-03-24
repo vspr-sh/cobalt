@@ -19,7 +19,7 @@ RUN pnpm deploy --filter=@imput/cobalt-api --prod /prod/api
 
 
 FROM base AS api 
-ENV API_URL="https://cobalt-api.vspr.sh"
+ENV API_URL="https://cobalt-api.kanker.dev"
 WORKDIR /app
 
 COPY --from=build-api /prod/api /app
@@ -31,7 +31,7 @@ CMD ["node", "src/cobalt"]
 
 FROM build AS build-web
 ARG WEB_HOST WEB_DEFAULT_API
-ENV WEB_HOST=${WEB_HOST:-cobalt.vspr.sh}
+ENV WEB_HOST=${WEB_HOST:-cobalt.kanker.dev}
 ENV WEB_DEFAULT_API=${WEB_DEFAULT_API}
 WORKDIR /app 
 COPY . /app
@@ -44,7 +44,7 @@ RUN pnpm run -r build
 
 FROM nginx:alpine-slim AS web
 ARG WEB_HOST
-ENV SERVER_NAME=${WEB_HOST:-cobalt.vspr.sh}
+ENV SERVER_NAME=${WEB_HOST:-cobalt.kanker.dev}
 
 
 RUN apk add --no-cache gettext
